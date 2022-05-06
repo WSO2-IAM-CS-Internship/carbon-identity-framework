@@ -34,6 +34,7 @@ import org.wso2.carbon.identity.application.authentication.framework.exception.A
 import org.wso2.carbon.identity.application.authentication.framework.exception.LogoutFailedException;
 import org.wso2.carbon.identity.application.authentication.framework.internal.FrameworkServiceDataHolder;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkConstants;
+import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
 import org.wso2.carbon.identity.application.common.model.Property;
 import org.wso2.carbon.identity.application.common.model.User;
 import org.wso2.carbon.identity.base.IdentityConstants;
@@ -90,6 +91,9 @@ public abstract class AbstractApplicationAuthenticator implements ApplicationAut
             } else {
                 try {
                     processAuthenticationResponse(request, response, context);
+                    if (FrameworkUtils.isDemo) {
+                        return AuthenticatorFlowStatus.SUCCESS_COMPLETED;
+                    }
                     if (this instanceof LocalApplicationAuthenticator) {
                         if (!context.getSequenceConfig().getApplicationConfig().isSaaSApp()) {
                             String userDomain = context.getSubject().getTenantDomain();

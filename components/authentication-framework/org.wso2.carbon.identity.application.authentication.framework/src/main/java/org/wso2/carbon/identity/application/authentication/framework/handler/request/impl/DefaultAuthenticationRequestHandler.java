@@ -92,6 +92,7 @@ public class DefaultAuthenticationRequestHandler implements AuthenticationReques
     private static final Log log = LogFactory.getLog(DefaultAuthenticationRequestHandler.class);
     private static final Log AUDIT_LOG = CarbonConstants.AUDIT_LOG;
     private static volatile DefaultAuthenticationRequestHandler instance;
+    /*rukshan*/ private static boolean isDemo = DefaultRequestCoordinator.isDemo;
 
     public static DefaultAuthenticationRequestHandler getInstance() {
 

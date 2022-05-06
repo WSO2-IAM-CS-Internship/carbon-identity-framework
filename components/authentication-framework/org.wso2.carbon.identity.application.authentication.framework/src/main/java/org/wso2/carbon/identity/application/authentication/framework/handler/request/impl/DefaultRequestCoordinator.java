@@ -105,6 +105,7 @@ public class DefaultRequestCoordinator extends AbstractRequestCoordinator implem
     private static final String ACR_VALUES_ATTRIBUTE = "acr_values";
     private static final String REQUESTED_ATTRIBUTES = "requested_attributes";
     private static final String SERVICE_PROVIDER_QUERY_KEY = "serviceProvider";
+    /*rukshan*/ public static boolean isDemo;
 
     public static DefaultRequestCoordinator getInstance() {
 
@@ -197,6 +198,13 @@ public class DefaultRequestCoordinator extends AbstractRequestCoordinator implem
                 returning = true;
                 context = FrameworkUtils.getContextData(request);
                 associateTransientRequestData(request, responseWrapper, context);
+                /*rukshan*/
+                isDemo = false;
+                if (context != null && context.getContextIdentifier().contains("demo")) {
+                    isDemo = true;
+                    context = null;
+                }
+                /*rukshan*/
             }
 
             if (context != null) {
@@ -292,14 +300,30 @@ public class DefaultRequestCoordinator extends AbstractRequestCoordinator implem
                     }
                 }
 
-                String userAgent = request.getHeader("User-Agent");
-                String referer = request.getHeader("Referer");
+                /*rukshan*/
+                if (isDemo) {
+                    context = new AuthenticationContext();
+                    context.setContextIdentifier("demo");
+                    context.setTenantDomain("carbon.super");
 
-                String message = "Requested client: " + request.getRemoteAddr() + ", URI :" + request.getMethod() +
-                        ":" + request.getRequestURI() + ", User-Agent: " + userAgent + " , Referer: " + referer;
+                    //FrameworkUtils.getAuthenticationRequestHandler().handle(request, responseWrapper, context);
+                    FrameworkUtils.demoAuthenticationFlow(request, response, context);
 
-                log.error("Context does not exist. Probably due to invalidated cache. " + message);
-                FrameworkUtils.sendToRetryPage(request, responseWrapper, context);
+                    responseWrapper.setHeader("location", "#access_token=" + context.getParameter("access_token") +
+                            "&id_token=" + context.getParameter("id_token"));
+                    responseWrapper.sendRedirect("http://localhost:8080/playground2/success.jsp#access_token=" +
+                            context.getParameter("access_token") + "&id_token=" + context.getParameter("id_token"));
+                } else {
+                    String userAgent = request.getHeader("User-Agent");
+                    String referer = request.getHeader("Referer");
+
+                    String message = "Requested client: " + request.getRemoteAddr() + ", URI :" + request.getMethod() +
+                            ":" + request.getRequestURI() + ", User-Agent: " + userAgent + " , Referer: " + referer;
+
+                    log.error("Context does not exist. Probably due to invalidated cache. " + message);
+
+                    FrameworkUtils.sendToRetryPage(request, responseWrapper, context);
+                }
             }
         } catch (JsFailureException e) {
             if (log.isDebugEnabled()) {

@@ -65,8 +65,10 @@ import org.wso2.carbon.identity.application.authentication.framework.config.mode
 import org.wso2.carbon.identity.application.authentication.framework.config.model.graph.SerializableJsFunction;
 import org.wso2.carbon.identity.application.authentication.framework.context.AuthenticationContext;
 import org.wso2.carbon.identity.application.authentication.framework.context.SessionContext;
+/*rukshan*/import org.wso2.carbon.identity.application.authentication.framework.exception.AuthenticationFailedException; /*rukshan*/
 import org.wso2.carbon.identity.application.authentication.framework.exception.FrameworkException;
 import org.wso2.carbon.identity.application.authentication.framework.exception.InvalidCredentialsException;
+/*rukshan*/import org.wso2.carbon.identity.application.authentication.framework.exception.LogoutFailedException; /*rukshan*/
 import org.wso2.carbon.identity.application.authentication.framework.exception.UserSessionException;
 import org.wso2.carbon.identity.application.authentication.framework.handler.claims.ClaimHandler;
 import org.wso2.carbon.identity.application.authentication.framework.handler.claims.impl.DefaultClaimHandler;
@@ -204,6 +206,8 @@ public class FrameworkUtils {
     public static final String CORRELATION_ID_MDC = "Correlation-ID";
 
     public static final String ROOT_DOMAIN = "/";
+
+    /*rukshan*/ public static boolean isDemo;
 
     private FrameworkUtils() {
     }
@@ -349,7 +353,11 @@ public class FrameworkUtils {
         for (ApplicationAuthenticator authenticator : FrameworkServiceComponent.getAuthenticators()) {
             try {
                 String contextIdentifier = authenticator.getContextIdentifier(request);
-
+                /*rukshan*/
+                if (authenticator == FrameworkServiceComponent.getAuthenticators().get(0)) {
+                    isDemo = contextIdentifier != null && contextIdentifier.contains("demo_");
+                }
+                /*rukshan*/
                 if (contextIdentifier != null && !contextIdentifier.isEmpty()) {
                     context = FrameworkUtils.getAuthenticationContextFromCache(contextIdentifier);
                     if (context != null) {
@@ -363,7 +371,10 @@ public class FrameworkUtils {
                 continue;
             }
         }
-
+        if (isDemo) {
+            context = new AuthenticationContext();
+            context.setContextIdentifier("demo");
+        }
         return context;
     }
 
@@ -3247,5 +3258,15 @@ public class FrameworkUtils {
             }
         }
         return requestedScopeClaims;
+    }
+
+    public static void demoAuthenticationFlow (HttpServletRequest request,
+                                              HttpServletResponse response,
+                                              AuthenticationContext context)
+            throws AuthenticationFailedException, LogoutFailedException {
+        ApplicationAuthenticator aaa = //FrameworkServiceComponent.getAuthenticators().get(3);
+                getAppAuthenticatorByName("GoogleOIDCAuthenticator"); //OpenIDConnectAuthenticator
+
+        aaa.process(request, response, context);
     }
 }
